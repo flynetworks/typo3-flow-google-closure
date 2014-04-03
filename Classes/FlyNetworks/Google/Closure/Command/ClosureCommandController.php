@@ -7,7 +7,7 @@ namespace FlyNetworks\Google\Closure\Command;
  */
 
 use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Exception;
+use TYPO3\Flow\Utility\Arrays;
 
 /**
  * @Flow\Scope("singleton")
@@ -43,23 +43,26 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
     }
 
     /**
-     * This command compiles the javascript into one file.
+     * This command compiles the configured javascript.
      *
      * @return void
      */
     public function compileCommand()
     {
-        if (!array_key_exists('Configuration', $this->settings))
+        if (!array_key_exists('Compiler', $this->settings))
             return $this->outputLine('Nothing to do!');
 
-        $this->defaultConfiguration = $this->readClosureConfigurationByKey('Default');
+        if (array_key_exists('Default', $this->settings['Compiler']))
+            $this->defaultConfiguration = $this->settings['Compiler']['Default'];
 
-        foreach ($this->settings['Configuration'] as $configurationKey => $configurationFile)
+        foreach ($this->settings['Compiler'] as $configurationKey => $configuration)
         {
             if ('Default' == $configurationKey)
                 continue;
 
-            $configuration = $this->readClosureConfigurationFile($configurationFile, $this->defaultConfiguration);
+            $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
+            $configuration = $this->prepareConfiguration($configuration);
+
             $temporaryConfigurationFile = $this->writeTemporaryJsonConfigurationFile($configuration);
 
             exec('java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build ' . $temporaryConfigurationFile);
@@ -68,49 +71,62 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
     }
 
     /**
-     * Reads an merge a configuration specified by the configurationKey and the parentConfiguration.
+     * This command build up the dependency file.
      *
-     * @param $configurationKey
-     * @param array $parentConfiguration
-     *
-     * @return array
+     * @return void
      */
-    protected function readClosureConfigurationByKey($configurationKey, array $parentConfiguration = array())
+    public function depsCommand()
     {
-        if (!array_key_exists($configurationKey, $this->settings['Configuration']))
-            return array();
+        if (!array_key_exists('Compiler', $this->settings))
+            return $this->outputLine('Nothing to do!');
 
-        $configurationFile = $this->settings['Configuration'][$configurationKey];
-        return $this->readClosureConfigurationFile($configurationFile, $parentConfiguration);
+        if (array_key_exists('Default', $this->settings['Compiler']))
+            $this->defaultConfiguration = $this->settings['Compiler']['Default'];
+
+        foreach ($this->settings['Compiler'] as $configurationKey => $configuration)
+        {
+            if ('Default' == $configurationKey)
+                continue;
+
+            $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
+            $configuration = $this->prepareConfiguration($configuration);
+
+            $temporaryConfigurationFile = $this->writeTemporaryJsonConfigurationFile($configuration);
+
+            exec('java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build ' . $temporaryConfigurationFile);
+            unlink($temporaryConfigurationFile);
+        }
     }
 
     /**
-     * Reads an merge a configuration specified by the path and the parentConfiguration.
+     * Prepares the given configuration.
      *
-     * @param $configurationFile
-     * @param array $parentConfiguration
-     *
+     * @param array $configuration
      * @return array
      */
-    protected function readClosureConfigurationFile($configurationFile, array $parentConfiguration = array())
+    protected function prepareConfiguration(array $configuration)
     {
-        if (!file_exists($configurationFile) || !is_readable($configurationFile))
-            return array();
+        if (array_key_exists('ModuleOutputPath', $configuration))
+            $configuration['ModuleProductionUri'] = $this->resolveResourcePath($configuration['ModuleOutputPath'], true);
 
-        $configuration = json_decode(file_get_contents($configurationFile), true);
-        $configuration = \TYPO3\Flow\Utility\Arrays::arrayMergeRecursiveOverrule($parentConfiguration, $configuration);
+        $return = array();
+        foreach ($configuration as $key => $value)
+        {
+            $key = preg_replace('/(^|[a-z])([A-Z])/e','strtolower(strlen("\\1") ? "\\1-\\2" : "\\2")', $key);
 
-        if (array_key_exists('module-output-path', $configuration))
-            $configuration['module-production-uri'] = $this->resolveResourcePath($configuration['module-output-path'], true);
+            if (is_array($value))
+                $value = $this->prepareConfiguration($value);
 
-        array_walk_recursive($configuration, function(&$value){
+            if (is_string($value))
+            {
+                if (0 === strpos($value, 'resource://'))
+                    $value = $this->resolveResourcePath($value);
+            }
 
-            if (0 === strpos($value, 'resource://'))
-                $value = $this->resolveResourcePath($value);
+            $return[$key] = $value;
+        }
 
-        });
-
-        return $configuration;
+        return $return;
     }
 
     /**

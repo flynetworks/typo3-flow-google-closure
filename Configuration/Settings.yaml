@@ -1,5 +1,15 @@
 FlyNetworks:
   Google:
     Closure:
-      Configuration:
-        Default: 'Packages/Application/FlyNetworks.Google.Closure/Configuration/GoogleClosure.json'
+      Compiler:
+        Default:
+          Id: 'flynetworks-google-closure'
+          ClosureLibrary: 'resource://FlyNetworks.Google.Closure/Public/closure/goog'
+          OutputWrapper: ''
+          Mode: 'ADVANCED'
+          Level: 'VERBOSE'
+          Paths: []
+          Externs: []
+          Modules: []
+          Define:
+            goog.DEBUG: false
