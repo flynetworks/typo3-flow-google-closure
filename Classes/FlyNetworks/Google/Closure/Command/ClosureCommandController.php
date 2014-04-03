@@ -15,6 +15,10 @@ use TYPO3\Flow\Utility\Arrays;
 class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
 {
 
+    const COMPILE_COMMAND = 'java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build';
+
+    const DEPS_COMMAND = 'python Packages/Application/FlyNetworks.Google.Closure/Resources/Public/closure/bin/build/depswriter.py';
+
     /**
      * @var array
      */
@@ -30,6 +34,7 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
      * @var \TYPO3\Flow\Resource\Publishing\ResourcePublisher
      */
     protected $resourcePublisher;
+
 
     /**
      * Inject the settings
@@ -65,7 +70,7 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
 
             $temporaryConfigurationFile = $this->writeTemporaryJsonConfigurationFile($configuration);
 
-            exec('java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build ' . $temporaryConfigurationFile);
+            exec(self::COMPILE_COMMAND . ' ' . $temporaryConfigurationFile);
             unlink($temporaryConfigurationFile);
         }
     }
@@ -89,12 +94,19 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
                 continue;
 
             $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
-            $configuration = $this->prepareConfiguration($configuration);
 
-            $temporaryConfigurationFile = $this->writeTemporaryJsonConfigurationFile($configuration);
+            if (array_key_exists('Paths', $configuration))
+            {
+                $paths = $configuration['Paths'];
 
-            exec('java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build ' . $temporaryConfigurationFile);
-            unlink($temporaryConfigurationFile);
+                foreach ($paths as $path)
+                {
+                    $absolutePath = $this->resolveResourcePath($path, false);
+                    $relativePath = $this->resolveResourcePath($path, true);
+                }
+            }
+
+            exec(self::DEPS_COMMAND . ' --root_with_prefix="' . $absolutePath . ' ' . $relativePath . '" > ' . $absolutePath . '/deps.js');
         }
     }
 
