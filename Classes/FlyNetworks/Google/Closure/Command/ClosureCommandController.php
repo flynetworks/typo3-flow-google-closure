@@ -2,7 +2,7 @@
 namespace FlyNetworks\Google\Closure\Command;
 
 /**
- * @author Kay Schecker <k.schecker@netzbewegung.com>
+ * @author Kay Schecker <k.schecker@flynetworks.de>
  * @created 2014-04-02
  */
 
