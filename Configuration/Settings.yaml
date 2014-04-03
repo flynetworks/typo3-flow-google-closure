@@ -1,0 +1,5 @@
+FlyNetworks:
+  Google:
+    Closure:
+      Configuration:
+        Default: 'Packages/Application/FlyNetworks.Google.Closure/Configuration/GoogleClosure.json'
