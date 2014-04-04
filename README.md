@@ -1,5 +1,8 @@
 #Lightweight Google Closure Package for TYPO3 Flow
 
+## This package is also available as composer package:
+https://packagist.org/packages/flynetworks/google-closure
+
 ##### Example Configuration (Settings.yaml)
 
 ```lang
