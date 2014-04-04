@@ -28,21 +28,7 @@ For a full list of configuration options and additional support please see http:
 > The configuration options in the "Settings.yaml" are automatically converted from 
 > the CamelCase notation to the documented dash ("-") notation.
 > The compiler has the following default setup:
-```lang
-FlyNetworks:
-  Google:
-    Closure:
-      Compiler:
-        Your.Unique.Key.Or.Package.Key:
-          Id: 'your-unique-key-or-package-key'
-          ModuleOutputPath: 'resource://Your.Package/Public/JavaScripts/%s.min.js'
-          Paths:
-            - 'resource://Your.Package/Public/JavaScripts/'
-          Modules:
-            Application:
-              Inputs: 'resource://Your.Package/Public/JavaScripts/Application.js'
-              Deps: []
-```
+https://github.com/flynetworks/typo3-flow-google-closure/blob/master/Configuration/Settings.yaml
 
 
 ##### Available CommandLine Commands
