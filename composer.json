@@ -2,6 +2,7 @@
     "name": "flynetworks/google-closure",
     "type": "typo3-flow-package",
     "description": "This package provides the google closure javascript library. Also a compile and deps command is available through the command line.",
+    "keywords": ["typo3", "flow", "google", "closure", "compiler", "binary", "javascript", "minification", "minify", "compress" ],
     "license": ["LGPL-3.0+"],
     "require": {
         "typo3/flow": "*"
