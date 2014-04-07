@@ -1,6 +1,9 @@
 FlyNetworks:
   Google:
     Closure:
+      CompileCommand: 'java -jar %FLOW_PATH_ROOT%Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build'
+      DependencyBuilderCommand: 'python %FLOW_PATH_ROOT%Packages/Application/FlyNetworks.Google.Closure/Resources/Public/closure/bin/build/depswriter.py'
+      EmbedScriptMode: 'compiled'
       DependencyBuilder:
         Default:
           OutputFileName: 'Deps.js'

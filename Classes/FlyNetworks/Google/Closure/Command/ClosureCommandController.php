@@ -7,45 +7,17 @@ namespace FlyNetworks\Google\Closure\Command;
  */
 
 use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Utility\Arrays;
 
 /**
  * @Flow\Scope("singleton")
  */
 class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
 {
-
-    const COMPILE_COMMAND = 'java -jar Packages/Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build';
-
-    const DEPS_COMMAND = 'python Packages/Application/FlyNetworks.Google.Closure/Resources/Public/closure/bin/build/depswriter.py';
-
-    /**
-     * @var array
-     */
-    protected $settings;
-
-    /**
-     * @var array
-     */
-    protected $defaultConfiguration;
-
     /**
      * @Flow\Inject
-     * @var \TYPO3\Flow\Resource\Publishing\ResourcePublisher
+     * @var \FlyNetworks\Google\Closure\Configuration\ConfigurationManager
      */
-    protected $resourcePublisher;
-
-
-    /**
-     * Inject the settings
-     *
-     * @param array $settings
-     * @return void
-     */
-    public function injectSettings(array $settings)
-    {
-        $this->settings = $settings;
-    }
+    protected $configurationManager;
 
     /**
      * This command compiles the configured javascript.
@@ -54,24 +26,29 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
      */
     public function compileCommand()
     {
-        if (!array_key_exists('Compiler', $this->settings))
-            return $this->outputLine('Nothing to do!');
+        $compileCommand = $this->configurationManager->get('CompileCommand');
+        if (empty($compileCommand))
+        {
+            $this->outputLine('CompileCommand is empty!');
+            $this->sendAndExit();
+        }
 
-        if (array_key_exists('Default', $this->settings['Compiler']))
-            $this->defaultConfiguration = $this->settings['Compiler']['Default'];
+        $compilerSettings = $this->configurationManager->get('Compiler');
+        if (empty($compilerSettings))
+        {
+            $this->outputLine('Nothing to do!');
+            $this->sendAndExit();
+        }
 
-        foreach ($this->settings['Compiler'] as $configurationKey => $configuration)
+        foreach ($compilerSettings as $configurationKey => $configuration)
         {
             if ('Default' == $configurationKey)
                 continue;
 
-            $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
-            $configuration = $this->prepareConfiguration($configuration);
-
-            $temporaryConfigurationFile = $this->writeTemporaryJsonConfigurationFile($configuration);
-
-            exec(self::COMPILE_COMMAND . ' ' . $temporaryConfigurationFile);
-            unlink($temporaryConfigurationFile);
+            $temporaryFileName = FLOW_PATH_DATA . 'flynetworks.google.closure.configuration.json';
+            file_put_contents($temporaryFileName, json_encode($configuration));
+            exec($compileCommand . ' ' . $temporaryFileName);
+            unlink($temporaryFileName);
         }
     }
 
@@ -82,120 +59,46 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
      */
     public function depsCommand()
     {
-        if (!array_key_exists('DependencyBuilder', $this->settings))
-            return $this->outputLine('Invalid DependencyBuilder configuration');
+        $dependencyBuilderCommand = $this->configurationManager->get('DependencyBuilderCommand');
+        if (empty($dependencyBuilderCommand))
+        {
+            $this->outputLine('DependencyBuilderCommand is empty!');
+            $this->sendAndExit();
+        }
 
-        if (!array_key_exists('Default', $this->settings['DependencyBuilder']))
-            return $this->outputLine('Invalid DependencyBuilder configuration');
+        $compilerSettings = $this->configurationManager->get('Compiler');
+        if (empty($compilerSettings))
+        {
+            $this->outputLine('Nothing to do!');
+            $this->sendAndExit();
+        }
 
-        if (!array_key_exists('Compiler', $this->settings))
-            return $this->outputLine('Nothing to do!');
+        $dependencyBuilderSettings = $this->configurationManager->get('DependencyBuilder');
+        if (empty($dependencyBuilderSettings))
+        {
+            $this->outputLine('Nothing to do!');
+            $this->sendAndExit();
+        }
 
-        if (array_key_exists('Default', $this->settings['Compiler']))
-            $this->defaultConfiguration = $this->settings['Compiler']['Default'];
-
-        foreach ($this->settings['Compiler'] as $configurationKey => $configuration)
+        foreach ($compilerSettings as $configurationKey => $configuration)
         {
             if ('Default' == $configurationKey)
                 continue;
 
-            $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
+            $dependencyBuilderConfiguration = $dependencyBuilderSettings['Default'];
+            if (array_key_exists($configurationKey, $dependencyBuilderSettings))
+                $dependencyBuilderConfiguration = $dependencyBuilderSettings[$configurationKey];
 
-            $depsConfiguration = $this->settings['DependencyBuilder']['Default'];
-            if (array_key_exists($configurationKey, $this->settings['DependencyBuilder']))
+            if (array_key_exists('paths', $configuration))
             {
-                $depsConfiguration = Arrays::arrayMergeRecursiveOverrule($depsConfiguration, $this->settings['DependencyBuilder'][$configurationKey]);
-            }
-
-            if (array_key_exists('Paths', $configuration))
-            {
-                $paths = $configuration['Paths'];
-
-                foreach ($paths as $path)
+                $paths = $configuration['paths'];
+                foreach ($paths as $absolutePath)
                 {
-                    $absolutePath = $this->resolveResourcePath($path, false);
-                    $relativePath = $this->resolveResourcePath($path, true);
-
-                    $depsFile = $absolutePath . '/' . $depsConfiguration['OutputFileName'];
-                    exec(self::DEPS_COMMAND . ' --root_with_prefix="' . $absolutePath . ' ' . $relativePath . '" > ' . $depsFile);
+                    $relativePath = str_replace(FLOW_PATH_WEB, '/', $absolutePath);
+                    $dependencyFile = $absolutePath . $dependencyBuilderConfiguration['output-file-name'];
+                    exec($dependencyBuilderCommand . ' --root_with_prefix="' . $absolutePath . ' ' . $relativePath . '" > ' . $dependencyFile);
                 }
             }
         }
     }
-
-    /**
-     * Prepares the given configuration.
-     *
-     * @param array $configuration
-     * @return array
-     */
-    protected function prepareConfiguration(array $configuration)
-    {
-        if (array_key_exists('ModuleOutputPath', $configuration))
-            $configuration['ModuleProductionUri'] = $this->resolveResourcePath($configuration['ModuleOutputPath'], true);
-
-        $return = array();
-        foreach ($configuration as $key => $value)
-        {
-            $key = preg_replace('/(^|[a-z])([A-Z])/e','strtolower(strlen("\\1") ? "\\1-\\2" : "\\2")', $key);
-
-            if (is_array($value))
-                $value = $this->prepareConfiguration($value);
-
-            if (is_string($value))
-            {
-                if (0 === strpos($value, 'resource://'))
-                    $value = $this->resolveResourcePath($value);
-            }
-
-            $return[$key] = $value;
-        }
-
-        return $return;
-    }
-
-    /**
-     * Write a temporary json configuration file to the filesystem.
-     *
-     * @param array $configuration
-     *
-     * @return string
-     */
-    protected function writeTemporaryJsonConfigurationFile(array $configuration)
-    {
-        $filename = '/tmp/flynetworks.google.closure.configuration.json';
-
-        $configurationJson = json_encode($configuration);
-        file_put_contents($filename, $configurationJson);
-
-        return $filename;
-    }
-
-    /**
-     * Resolve a resource:// to an absolute or relative path.
-     *
-     * @param string $resourcePath
-     * @param bool $relative
-     *
-     * @return string
-     * @throws \TYPO3\Fluid\Core\ViewHelper\Exception
-     */
-    protected function resolveResourcePath($resourcePath, $relative = false)
-    {
-        $matches = array();
-        preg_match('#resource://([^/]*)/Public/(.*)#', $resourcePath, $matches);
-        if ($matches === array())
-            throw new \TYPO3\Fluid\Core\ViewHelper\Exception('Resource path "' . $resourcePath . '" can\'t be resolved.', 1328543327);
-
-        $packageKey = $matches[1];
-        $path = $matches[2];
-
-        $pathPrefix = '/';
-
-        if (!$relative)
-            $pathPrefix = getcwd() . '/Web/';
-
-        return $pathPrefix . $this->resourcePublisher->getStaticResourcesWebBaseUri() . 'Packages/' . $packageKey . '/' . $path;
-    }
-
 }

@@ -1,0 +1,4 @@
+FlyNetworks:
+  Google:
+    Closure:
+      EmbedScriptMode: 'dependency'
