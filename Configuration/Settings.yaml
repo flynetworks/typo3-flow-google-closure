@@ -1,6 +1,9 @@
 FlyNetworks:
   Google:
     Closure:
+      DependencyBuilder:
+        Default:
+          OutputFileName: 'Deps.js'
       Compiler:
         Default:
           Id: 'flynetworks-google-closure'

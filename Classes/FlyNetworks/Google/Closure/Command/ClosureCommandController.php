@@ -82,6 +82,12 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
      */
     public function depsCommand()
     {
+        if (!array_key_exists('DependencyBuilder', $this->settings))
+            return $this->outputLine('Invalid DependencyBuilder configuration');
+
+        if (!array_key_exists('Default', $this->settings['DependencyBuilder']))
+            return $this->outputLine('Invalid DependencyBuilder configuration');
+
         if (!array_key_exists('Compiler', $this->settings))
             return $this->outputLine('Nothing to do!');
 
@@ -95,6 +101,12 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
 
             $configuration = Arrays::arrayMergeRecursiveOverrule($this->defaultConfiguration, $configuration);
 
+            $depsConfiguration = $this->settings['DependencyBuilder']['Default'];
+            if (array_key_exists($configurationKey, $this->settings['DependencyBuilder']))
+            {
+                $depsConfiguration = Arrays::arrayMergeRecursiveOverrule($depsConfiguration, $this->settings['DependencyBuilder'][$configurationKey]);
+            }
+
             if (array_key_exists('Paths', $configuration))
             {
                 $paths = $configuration['Paths'];
@@ -103,10 +115,11 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
                 {
                     $absolutePath = $this->resolveResourcePath($path, false);
                     $relativePath = $this->resolveResourcePath($path, true);
+
+                    $depsFile = $absolutePath . '/' . $depsConfiguration['OutputFileName'];
+                    exec(self::DEPS_COMMAND . ' --root_with_prefix="' . $absolutePath . ' ' . $relativePath . '" > ' . $depsFile);
                 }
             }
-
-            exec(self::DEPS_COMMAND . ' --root_with_prefix="' . $absolutePath . ' ' . $relativePath . '" > ' . $absolutePath . '/deps.js');
         }
     }
 

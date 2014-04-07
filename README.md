@@ -9,6 +9,9 @@ https://packagist.org/packages/flynetworks/google-closure
 FlyNetworks:
   Google:
     Closure:
+      DependencyBuilder:
+        Your.Unique.Key.Or.Package.Key:
+          OutputFileName: 'MyDepsFile.js'
       Compiler:
         Your.Unique.Key.Or.Package.Key:
           Id: 'your-unique-key-or-package-key'
