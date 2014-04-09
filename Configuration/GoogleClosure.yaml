@@ -1,0 +1,13 @@
+Default:
+  embedMode: 'compiled'
+  dependency:
+    command: 'python %FLOW_PATH_PACKAGES%Application/FlyNetworks.Google.Closure/Resources/Public/closure/bin/build/depswriter.py'
+    outputFileName: 'Deps.js'
+  compiler:
+    command: 'java -jar %FLOW_PATH_PACKAGES%Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build'
+    options:
+      closureLibrary: 'resource://FlyNetworks.Google.Closure/Public/closure/goog'
+      mode: 'ADVANCED'
+      level: 'VERBOSE'
+      define:
+        goog.DEBUG: FALSE
