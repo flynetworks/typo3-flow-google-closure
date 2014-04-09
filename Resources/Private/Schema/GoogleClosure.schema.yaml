@@ -1,75 +1,81 @@
 type: dictionary
-properties:
-  'Default':
-    type: dictionary
-    required: TRUE
-    additionalProperties: FALSE
-    properties:
-      'embedMode': {type: string, required: TRUE, enum: ['compiled', 'dependency']}
-      'compiler':
-        type: dictionary
-        required: TRUE
-        additionalProperties: FALSE
-        properties:
-          'options':
-            type: dictionary
-            required: TRUE
-            additionalProperties: FALSE
-            properties:
-              'id': {type: string}
-              'inputs': {type: array, items: {type: string}}
-              'paths': {type: array, items: {type: string}}
-              'externs': {type: array, items: {type: string}}
-              'customExternsOnly': {type: boolean}
-              'closureLibrary': {type: string}
-              'experimentalExcludeClosureLibrary': {type: boolean}
-              'mode': {type: string, enum: ['RAW', 'WHITESPACE', 'SIMPLE', 'ADVANCED']}
-              'level': {type: string, enum: ['QUIET', 'DEFAULT', 'VERBOSE']}
-              'inherits': {type: string}
-              'debug': {type: boolean}
-              'prettyPrint': {type: boolean}
-              'printInputDelimiter': {type: boolean}
-              'outputFile': {type: string}
-              'outputWrapper': {type: array, items: {type: string}}
-              'outputCharset': {type: string}
-              'fingerprint': {type: boolean}
-              'modules':
+additionalProperties:
+  type: dictionary
+  required: TRUE
+  additionalProperties: FALSE
+  properties:
+    'extends': {type: string}
+    'embedMode': {type: string, enum: ['compiled', 'dependency']}
+    'dependency':
+      type: dictionary
+      additionalProperties: FALSE
+      properties:
+        'command': {type: string}
+        'outputFileName': {type: string}
+    'compiler':
+      type: dictionary
+      additionalProperties: FALSE
+      properties:
+        'command': {type: string}
+        'options':
+          type: dictionary
+          required: TRUE
+          additionalProperties: FALSE
+          properties:
+            'id': {type: string}
+            'inputs': {type: array, items: {type: string}}
+            'paths': {type: array, items: {type: string}}
+            'externs': {type: array, items: {type: string}}
+            'customExternsOnly': {type: boolean}
+            'closureLibrary': {type: string}
+            'experimentalExcludeClosureLibrary': {type: boolean}
+            'mode': {type: string, enum: ['RAW', 'WHITESPACE', 'SIMPLE', 'ADVANCED']}
+            'level': {type: string, enum: ['QUIET', 'DEFAULT', 'VERBOSE']}
+            'inherits': {type: string}
+            'debug': {type: boolean}
+            'prettyPrint': {type: boolean}
+            'printInputDelimiter': {type: boolean}
+            'outputFile': {type: string}
+            'outputWrapper': {type: array, items: {type: string}}
+            'outputCharset': {type: string}
+            'fingerprint': {type: boolean}
+            'modules':
+              type: dictionary
+              additionalProperties:
                 type: dictionary
-                additionalProperties:
-                  type: dictionary
-                  required: TRUE
-                  additionalProperties: FALSE
-                  properties:
-                    'inputs': {type: array, required: TRUE, items: {type: string}}
-                    'deps': {type: array, required: TRUE, items: {type: string}}
-              'moduleOutputPath': {type: string}
-              'moduleProductionUri': {type: string}
-              'moduleInfoPath': {type: string}
-              'globalScopeName': {type: string}
-              'define': {type: dictionary}
-              'checks':
-                type: dictionary
-                additionalProperties: {type: string, enum: ['OFF', 'WARNING', 'ERROR']}
-              'treatWarningsAsErrors': {type: boolean}
-              'exportTestFunctions': {type: boolean}
-              'nameSuffixesToStrip': {type: array, items: {type: string}}
-              'typePrefixesToStrip': {type: array, items: {type: string}}
-              'idGenerators': {type: array, items: {type: string}}
-              'ambiguateProperties': {type: boolean}
-              'disambiguateProperties': {type: boolean}
-              'experimentalCompilerOptions':
+                required: TRUE
+                additionalProperties: FALSE
+                properties:
+                  'inputs': {type: array, required: TRUE, items: {type: string}}
+                  'deps': {type: array, required: TRUE, items: {type: string}}
+            'moduleOutputPath': {type: string}
+            'moduleProductionUri': {type: string}
+            'moduleInfoPath': {type: string}
+            'globalScopeName': {type: string}
+            'define': {type: dictionary}
+            'checks':
+              type: dictionary
+              additionalProperties: {type: string, enum: ['OFF', 'WARNING', 'ERROR']}
+            'treatWarningsAsErrors': {type: boolean}
+            'exportTestFunctions': {type: boolean}
+            'nameSuffixesToStrip': {type: array, items: {type: string}}
+            'typePrefixesToStrip': {type: array, items: {type: string}}
+            'idGenerators': {type: array, items: {type: string}}
+            'ambiguateProperties': {type: boolean}
+            'disambiguateProperties': {type: boolean}
+            'experimentalCompilerOptions':
+              type: dictionary
+              additionalProperties: {type: any}
+            'customPasses':
+              type: array
+              items:
                 type: dictionary
                 additionalProperties: {type: any}
-              'customPasses':
-                type: array
-                items:
-                  type: dictionary
-                  additionalProperties: {type: any}
-              'soyFunctionPlugins': {type: array, items: {type: string}}
-              'jsdocHtmlOutputPath': {type: string}
-              'variableMapInputFile': {type: string}
-              'variableMapOutputFile': {type: string}
-              'propertyMapInputFile': {type: string}
-              'propertyMapOutputFile': {type: string}
-              'testTemplate': {type: string}
-              'testExcludes': {type: array, items: {type: string}}
+            'soyFunctionPlugins': {type: array, items: {type: string}}
+            'jsdocHtmlOutputPath': {type: string}
+            'variableMapInputFile': {type: string}
+            'variableMapOutputFile': {type: string}
+            'propertyMapInputFile': {type: string}
+            'propertyMapOutputFile': {type: string}
+            'testTemplate': {type: string}
+            'testExcludes': {type: array, items: {type: string}}
