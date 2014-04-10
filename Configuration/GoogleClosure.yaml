@@ -6,7 +6,8 @@ Default:
   compiler:
     command: 'java -jar %FLOW_PATH_PACKAGES%Application/FlyNetworks.Google.Closure/Resources/Private/Bin/Plovr.jar build'
     options:
-      closureLibrary: 'resource://FlyNetworks.Google.Closure/Public/closure/goog'
+      id: ''
+      closureLibrary: 'resource://FlyNetworks.Google.Closure/Public/closure/goog/'
       mode: 'ADVANCED'
       level: 'VERBOSE'
       define:
