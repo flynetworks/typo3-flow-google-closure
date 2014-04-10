@@ -11,104 +11,104 @@ use TYPO3\Flow\Annotations as Flow;
 
 /**
  * View helper which creates one or few <script type="text/javascript" tag(s).
- * The scripts sources are taken from the Settings.yaml "Compiler" or "DependencyBuilder" configuration.
- * The render mode is specified by the "EmbedScriptMode" configuration option.
+ * The scripts sources are taken from the GoogleClosure.yaml "compiler" or "dependency" configuration.
+ * The render mode is specified by the "embedMode" configuration option.
  */
 class EmbedScriptViewHelper extends AbstractViewHelper
 {
     /**
      * @Flow\Inject
-     * @var \FlyNetworks\Google\Closure\Configuration\ConfigurationManager
+     * @var \FlyNetworks\Google\Closure\Configuration\ConfigurationProvider
      */
-    protected $configurationManager;
+    protected $configurationProvider;
 
     /**
-     * Render the "Script" tag(s)
-     *
-     * @param string $compilerKey
-     * @return string "script"-Tag(s).
-     * @api
+     * @var string
      */
-    public function render($compilerKey)
-    {
-        $embedScriptMode = $this->configurationManager->get('EmbedScriptMode');
+    protected $configurationKey;
 
-        switch ($embedScriptMode)
+    /**
+     * @param string $configurationKey
+     * @return string
+     */
+    public function render($configurationKey)
+    {
+        $this->configurationKey = $configurationKey;
+
+        switch ($this->getConfiguration('embedMode'))
         {
             case 'compiled':
-                return $this->getEmbedCodeCompiled($compilerKey);
+                $files = $this->getCompilerFiles();
+                break;
             case 'dependency':
-                return $this->getEmbedCodeDependency($compilerKey);
+                $files = $this->getDependencyFiles();
+                break;
         }
+
+        $return = array();
+        foreach ($files as $file)
+            $return[] = '<script type="text/javascript" src="' . $file . '"></script>';
+
+        return implode(PHP_EOL, $return);
     }
 
-    protected function getEmbedCodeCompiled($compilerKey)
+    /**
+     * @param string $configurationPath
+     * @return array
+     */
+    protected function getConfiguration($configurationPath)
     {
-        $compilerSettings = $this->configurationManager->get('Compiler');
-        if (empty($compilerSettings))
-            return;
+        return $this->configurationProvider->getConfiguration($this->configurationKey . '.' . $configurationPath);
+    }
 
-        if (!array_key_exists($compilerKey, $compilerSettings))
-            return;
+    /**
+     * @return array
+     */
+    protected function getCompilerFiles()
+    {
+        $return = array();
+        $modules = $this->getConfiguration('compiler.options.modules');
 
-        $compilerKeySettings = $compilerSettings[$compilerKey];
+        if (!is_array($modules))
+            return $return;
 
-        $return = '';
-        foreach ($compilerKeySettings['modules'] as $module => $moduleConfiguration)
-            $return .= $this->getEmbedCodeBySrc(sprintf($compilerSettings[$compilerKey]['module-output-path'], $module));
+        foreach ($modules as $module => $moduleConfiguration)
+            $return[] = sprintf($this->getConfiguration('compiler.options.moduleOutputPath'), $module);
 
         return $return;
     }
 
-    protected function getEmbedCodeDependency($compilerKey)
+    /**
+     * @return array
+     */
+    protected function getDependencyFiles()
     {
-        $compilerSettings = $this->configurationManager->get('Compiler');
-        if (empty($compilerSettings))
-            return;
+        $return = array($this->getConfiguration('compiler.options.closureLibrary') . 'base.js');
 
-        $dependencyBuilderSettings = $this->configurationManager->get('DependencyBuilder');
-        if (empty($dependencyBuilderSettings))
-            return;
-
-        $dependencyBuilderConfiguration = $dependencyBuilderSettings['Default'];
-        if (array_key_exists($compilerKey, $dependencyBuilderSettings))
-            $dependencyBuilderConfiguration = $dependencyBuilderSettings[$compilerKey];
-
-        if (!array_key_exists($compilerKey, $compilerSettings))
-            return;
-
-        $compilerKeySettings = $compilerSettings[$compilerKey];
-        $dependencyFile = $dependencyBuilderConfiguration['output-file-name'];
-
-        $return = $this->getEmbedCodeBySrc($compilerKeySettings['closure-library'] . '/base.js');
-
-
-        foreach ($compilerKeySettings['modules'] as $module => $moduleConfiguration)
+        $inputs = $this->getConfiguration('compiler.options.inputs');
+        if (is_array($inputs))
         {
-            if (array_key_exists('inputs', $moduleConfiguration))
+            foreach ($inputs as $input)
+                $return[] = $input;
+        }
+
+        $modules = $this->getConfiguration('compiler.options.modules');
+        if (is_array($modules))
+        {
+            foreach ($modules as $moduleConfiguration)
             {
-                $inputs = $moduleConfiguration['inputs'];
-
-                if (!is_array($inputs))
-                    $inputs = array($inputs);
-
-                foreach ($inputs as $input)
-                   $return .= $this->getEmbedCodeBySrc($input);
+                foreach ($moduleConfiguration['inputs'] as $input)
+                    $return[] = $input;
             }
         }
 
-        if (array_key_exists('paths', $compilerKeySettings))
+        $paths = $this->getConfiguration('compiler.options.paths');
+        if (is_array($paths))
         {
-            $paths = $compilerKeySettings['paths'];
             foreach ($paths as $path)
-                $return .= $this->getEmbedCodeBySrc($path . $dependencyFile);
+                $return[] = $path . $this->getConfiguration('dependency.outputFileName');
         }
 
         return $return;
-    }
-
-    protected function getEmbedCodeBySrc($src)
-    {
-        return '<script type="text/javascript" src="' . $src . '"></script>' . PHP_EOL;
     }
 }
