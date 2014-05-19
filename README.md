@@ -24,6 +24,26 @@ UniqueIdentifier:
     options:
 ```
 
+### Example
+
+```
+MyUniqueKey:
+  compiler:
+    options:
+      id: 'my-project-id'
+      externs:
+        - 'resource://My.Package/Public/JavaScripts/Externs/SomeExterns.js'
+      paths:
+        - 'resource://My.Package/Public/JavaScripts/'
+      moduleOutputPath: 'resource://My.Package/Public/JavaScripts/%s.min.js'
+      moduleProductionUri: 'resource://My.Package/Public/JavaScripts/%s.min.js'
+      modules:
+        'Application':
+          deps: []
+          inputs:
+            - 'resource://My.Package/Public/JavaScripts/Application.js'
+```
+
 Don't use a dot "." for the UniqueIdentifier! I recommend to use only alphanumeric characters.<br />
 Within the "options" property you can start to configure the compiler parameters.<br />
 

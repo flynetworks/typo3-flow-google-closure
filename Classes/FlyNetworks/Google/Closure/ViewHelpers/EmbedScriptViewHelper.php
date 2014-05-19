@@ -92,6 +92,13 @@ class EmbedScriptViewHelper extends AbstractViewHelper
                 $return[] = $input;
         }
 
+        $paths = $this->getConfiguration('compiler.options.paths');
+        if (is_array($paths))
+        {
+            foreach ($paths as $path)
+                $return[] = $path . $this->getConfiguration('dependency.outputFileName');
+        }
+
         $modules = $this->getConfiguration('compiler.options.modules');
         if (is_array($modules))
         {
@@ -100,13 +107,6 @@ class EmbedScriptViewHelper extends AbstractViewHelper
                 foreach ($moduleConfiguration['inputs'] as $input)
                     $return[] = $input;
             }
-        }
-
-        $paths = $this->getConfiguration('compiler.options.paths');
-        if (is_array($paths))
-        {
-            foreach ($paths as $path)
-                $return[] = $path . $this->getConfiguration('dependency.outputFileName');
         }
 
         return $return;

@@ -122,8 +122,9 @@ class ClosureCommandController extends \TYPO3\Flow\Cli\CommandController
             }
 
             $paths = $this->configurationProvider->getConfiguration($configurationKey . '.compiler.options.paths');
+
             foreach ($paths as $path)
-                exec($dependencyCommand . ' --root_with_prefix="' . FLOW_PATH_WEB . $path . ' ' . $path . '" > ' . FLOW_PATH_WEB . $path . $dependencyOutputFileName);
+                exec($dependencyCommand . ' --root_with_prefix="' . FLOW_PATH_WEB . $path . ' ../../../../../../' . $path . '" > ' . FLOW_PATH_WEB . $path . $dependencyOutputFileName);
         }
     }
 }
