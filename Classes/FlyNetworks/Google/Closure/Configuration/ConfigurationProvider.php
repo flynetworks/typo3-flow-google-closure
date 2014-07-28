@@ -60,13 +60,13 @@ class ConfigurationProvider
      */
     protected function prepareConfiguration()
     {
-        array_walk_recursive($this->configuration, function(&$value){
+        array_walk_recursive($this->configuration, function(&$value, $key, $context){
             if (is_string($value))
             {
                 if (0 === strpos($value, 'resource://'))
-                    $value = $this->resolveResourcePath($value);
+                    $value = $context->resolveResourcePath($value);
             }
-        });
+        }, $this);
 
         //extend configurations
         foreach ($this->configuration as $index => $subConfiguration)
@@ -79,7 +79,7 @@ class ConfigurationProvider
      * @param string $resourcePath
      * @return string
      */
-    protected function resolveResourcePath($resourcePath)
+    public function resolveResourcePath($resourcePath)
     {
         $matches = array();
         preg_match('#resource://([^/]*)/Public/(.*)#', $resourcePath, $matches);
@@ -127,7 +127,7 @@ class ConfigurationProvider
      */
     public function getConfigurationKeys()
     {
-       return array_keys($this->configuration);
+        return array_keys($this->configuration);
     }
 
     /**
